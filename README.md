@@ -3,9 +3,10 @@
 This repository contains automation scripts for the **APS GenAI Firewall**, focusing on the **calypsoAI** sub-product.
 
 It is designed to:
+
 - Centralize all APS GenAI Firewall automation scripts in one governed, auditable place.
 - Ensure scripts are **tagged, documented, reviewed, classified** as per APS Script Migration Framework.
-- Align with NestlÃ© ITIP and APS GitHub Governance for Source Code Management and DevSecOps.
+- Align with Nestlé ITIP and APS GitHub Governance for Source Code Management and DevSecOps.
 
 ---
 
@@ -76,12 +77,14 @@ See `docs/classification-model.md` for detailed rules.
 ## Adding New Scripts
 
 1. Identify the correct product and functional folder:
+
    - `genai-firewall/calypsoAI/maintenance`
    - `genai-firewall/calypsoAI/deployment`
    - `genai-firewall/calypsoAI/monitoring`
    - `genai-firewall/calypsoAI/test`
 
 2. Use the naming convention:
+
    - `calypsoai-<description-using-verbs>.<ext>`
    - Examples:
      - `calypsoai-rotate-keys.ps1`
@@ -90,11 +93,9 @@ See `docs/classification-model.md` for detailed rules.
 3. Add mandatory metadata header to the script (see `docs/contributing.md`).
 
 4. Update the corresponding folder `README.md`:
+
    - Describe the script.
    - Set classification.
    - Declare the owner.
 
-5. Open a PR from a feature branch â†’ `dev`, referencing AB# work item and classification.
-# Learning001
-
-This is a description for the readme file.
+5. Open a PR from a feature branch → `dev`, referencing AB# work item and classification.

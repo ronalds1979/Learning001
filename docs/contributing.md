@@ -1,4 +1,4 @@
-﻿# Contributing Guide â€“ APS GenAI Firewall Scripts
+﻿# Contributing Guide — APS GenAI Firewall Scripts
 
 ## 1. Before You Start
 
@@ -13,9 +13,11 @@
 ## 2. Script Naming Convention
 
 Use:
+
 - `calypsoai-<description-using-verbs>.<ext>`
 
 Examples:
+
 - `calypsoai-rotate-keys.ps1`
 - `calypsoai-export-metrics.py`
 - `calypsoai-test-connection.ps1`
@@ -32,3 +34,4 @@ Each script must include a header like:
   AB_WorkItem: AB#<id>
   Sensitivity: <Public-Internal|Restricted|Confidential>
   Dependencies: <list>
+```
