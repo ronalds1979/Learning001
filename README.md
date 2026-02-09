@@ -1,4 +1,4 @@
-﻿# APS â€“ GenAI Firewall (calypsoAI) â€“ Automation Scripts
+﻿# APS - GenAI Firewall (calypsoAI) - Automation Scripts
 
 This repository contains automation scripts for the **APS GenAI Firewall**, focusing on the **calypsoAI** sub-product.
 
@@ -11,11 +11,11 @@ It is designed to:
 
 ## Repository Structure
 
-- `.github/workflows` â€“ CI workflows (linting, CodeQL, secret scanning, dependency review).
-- `docs` â€“ Repository overview, classification model, contributing guide, migration evidence.
-- `shared/modules` â€“ Reusable PowerShell modules / Python libraries.
-- `shared/templates` â€“ Shared configuration and JSON/YAML templates.
-- `genai-firewall/calypsoAI` â€“ Product-specific scripts, organized by functional area:
+- `.github/workflows` - CI workflows (linting, CodeQL, secret scanning, dependency review).
+- `docs` - Repository overview, classification model, contributing guide, migration evidence.
+- `shared/modules` - Reusable PowerShell modules / Python libraries.
+- `shared/templates` - Shared configuration and JSON/YAML templates.
+- `genai-firewall/calypsoAI` - Product-specific scripts, organized by functional area:
   - `maintenance`
   - `deployment`
   - `monitoring`
@@ -65,9 +65,9 @@ CI checks (linting, CodeQL, secret scanning, dependency review) **must pass** be
 
 Scripts must be classified as one of:
 
-- `Public-Internal` â€“ No production credentials or sensitive business logic.
-- `Restricted` â€“ Touches security infrastructure, identity, or sensitive flows.
-- `Confidential` â€“ Only allowed if an approved pattern and design exist; otherwise do **not** commit.
+- `Public-Internal` - No production credentials or sensitive business logic.
+- `Restricted` - Touches security infrastructure, identity, or sensitive flows.
+- `Confidential` - Only allowed if an approved pattern and design exist; otherwise do **not** commit.
 
 See `docs/classification-model.md` for detailed rules.
 
