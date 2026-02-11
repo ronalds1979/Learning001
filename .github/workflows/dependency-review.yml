@@ -1,0 +1,275 @@
+name: Dependency Review
+
+# Reviews dependency changes in pull requests to:
+# - Detect known vulnerabilities in new/updated dependencies
+# - Flag license compliance issues
+# - Alert on deprecated or unmaintained packages
+# - Prevent supply chain attacks
+on:
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+      # Python dependency files
+      - '**/requirements.txt'
+      - '**/requirements-dev.txt'
+      - '**/pyproject.toml'
+      - '**/Pipfile'
+      - '**/Pipfile.lock'
+      - '**/setup.py'
+      - '**/poetry.lock'
+      # Node.js/JavaScript dependency files
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '**/yarn.lock'
+      - '**/pnpm-lock.yaml'
+      # Other common dependency files
+      - '**/Gemfile'
+      - '**/Gemfile.lock'
+      - '**/composer.json'
+      - '**/composer.lock'
+      - '**/go.mod'
+      - '**/go.sum'
+      # PowerShell module manifests
+      - '**/*.psd1'
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # Prevent long-running reviews
+    
+    # Required permissions
+    permissions:
+      contents: read        # Read repository contents
+      pull-requests: write  # Comment on PRs with findings
+      issues: write         # Create issues for tracking
+
+    steps:
+      # Step 1: Check out repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Perform comprehensive dependency review
+      # Analyzes dependency changes between base and head branches
+      - name: Dependency Review
+        id: dependency-review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail the workflow if vulnerabilities of this severity or higher are found
+          # Options: low, moderate, high, critical
+          fail-on-severity: high
+          
+          # Only fail on vulnerabilities in production dependencies
+          # Comment out to include dev dependencies
+          fail-on-scopes: runtime
+          
+          # License compliance configuration
+          # Block copyleft licenses that may conflict with proprietary code
+          # Use SPDX identifiers: https://spdx.org/licenses/
+          deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.0-only, LGPL-2.1-only, LGPL-3.0-only
+          
+          # Optionally allow specific permissive licenses only
+          # Uncomment to enforce an allowlist approach:
+          # allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD
+          
+          # Warn about missing license information but don't fail
+          # Note: There is no fail-if-no-license parameter
+          
+          # Comment on PRs with vulnerability summary
+          # Options: always, on-failure, never
+          comment-summary-in-pr: on-failure
+          
+          # Base and head refs for comparison
+          # Defaults are usually correct, but can be overridden:
+          # base-ref: ${{ github.event.pull_request.base.sha }}
+          # head-ref: ${{ github.event.pull_request.head.sha }}
+          
+          # Vulnerability database configuration
+          # Uses GitHub Advisory Database (automatically updated)
+          
+          # Optional: Allow specific advisories (e.g., false positives)
+          # Format: GHSA-xxxx-yyyy-zzzz
+          # allow-ghsas: GHSA-abcd-1234-5678
+          
+          # Optional: Explicitly deny specific advisories
+          # deny-ghsas: GHSA-xxxx-yyyy-zzzz
+          
+          # Optional: Allow specific vulnerable dependencies (use with extreme caution)
+          # Format: pkg:ecosystem/name@version
+          # allow-dependencies-licenses: pkg:npm/example@1.0.0
+          
+          # Retry configuration for API rate limiting
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 120
+          
+        # Continue to summary even if vulnerabilities are found
+        continue-on-error: true
+
+      # Step 3: Export review results to file for artifacts
+      # The action outputs results in the step, capture them
+      - name: Export review results
+        if: always()
+        shell: bash
+        run: |
+          # Create results directory
+          mkdir -p dependency-review-results
+          
+          # Escape PR title for JSON (avoid jq dependency)
+          PR_TITLE=$(echo '${{ github.event.pull_request.title }}' | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g' | sed 's/\r/\\r/g' | sed 's/\n/\\n/g')
+          
+          # Create a summary JSON file with key information
+          cat > dependency-review-results/summary.json <<EOF
+          {
+            "pr_number": "${{ github.event.pull_request.number }}",
+            "pr_title": "${PR_TITLE}",
+            "base_ref": "${{ github.event.pull_request.base.ref }}",
+            "head_ref": "${{ github.event.pull_request.head.ref }}",
+            "review_outcome": "${{ steps.dependency-review.outcome }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "workflow_run": "${{ github.run_id }}"
+          }
+          EOF
+          
+          echo "Results exported to dependency-review-results/"
+
+      # Step 4: Upload dependency review results as artifact
+      # Useful for compliance audits and historical tracking
+      - name: Upload dependency review results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-review-pr-${{ github.event.pull_request.number }}
+          path: dependency-review-results/
+          retention-days: 90  # Keep for compliance/audit (adjust as needed)
+          if-no-files-found: warn
+
+      # Step 5: Generate human-readable summary
+      - name: Review summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## 📦 Dependency Review Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR Number:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Base Branch:** \`${{ github.event.pull_request.base.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Head Branch:** \`${{ github.event.pull_request.head.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered By:** @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Display review outcome
+          if [ "${{ steps.dependency-review.outcome }}" == "success" ]; then
+            echo "**Review Status:** ✅ **Passed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✨ No high-severity vulnerabilities or license issues detected in dependency changes." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**What was checked:**" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Vulnerabilities (severity: high and above)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ License compliance (blocked: GPL, AGPL, LGPL variants)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Scope: Runtime/production dependencies only" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Review Status:** ❌ **Failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Issues Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "One or more of the following issues were found:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔴 **High or critical severity vulnerabilities** in dependencies" >> $GITHUB_STEP_SUMMARY
+            echo "- ⚖️ **Prohibited licenses** (GPL, AGPL, LGPL)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📦 **Dependency changes** that introduce security risks" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Required Actions" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "1. **Review PR comments** for detailed vulnerability and license findings" >> $GITHUB_STEP_SUMMARY
+            echo "2. **Update vulnerable dependencies** to patched versions" >> $GITHUB_STEP_SUMMARY
+            echo "3. **Replace incompatible licenses** with MIT/Apache-2.0/BSD alternatives" >> $GITHUB_STEP_SUMMARY
+            echo "4. **Document exceptions** if issues cannot be immediately resolved" >> $GITHUB_STEP_SUMMARY
+            echo "5. **Consult security team** for guidance on complex cases" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔗 Resources" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- [GitHub Advisory Database](https://github.com/advisories)" >> $GITHUB_STEP_SUMMARY
+            echo "- [Dependency Review Action Docs](https://github.com/actions/dependency-review-action)" >> $GITHUB_STEP_SUMMARY
+            echo "- [SPDX License List](https://spdx.org/licenses/)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Analysis powered by GitHub Advisory Database | Run ID: ${{ github.run_id }}*" >> $GITHUB_STEP_SUMMARY
+
+      # Step 6: Post detailed guidance on failure (only if not already commented by action)
+      - name: Post additional guidance on failure
+        if: always() && steps.dependency-review.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check if action already commented
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            // Look for dependency-review-action comment
+            const hasActionComment = comments.data.some(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('Dependency Review')
+            );
+            
+            // Only post if action didn't comment (shouldn't happen with on-failure setting)
+            if (!hasActionComment) {
+              const comment = `## ⚠️ Dependency Review Failed
+              
+              This PR introduces dependencies with security or licensing issues.
+              
+              ### 🔍 Common Resolutions
+              
+              #### For Vulnerabilities:
+              - Update the package to the latest patched version
+              - Check [GitHub Advisory Database](https://github.com/advisories) for recommended fixes
+              - Consider alternative packages if no fix is available
+              - Document accepted risks with security team approval
+              
+              #### For License Issues:
+              - Verify license compatibility with your project's license
+              - Prefer MIT, Apache-2.0, or BSD-licensed alternatives
+              - Get legal/compliance approval for copyleft licenses (GPL, LGPL, AGPL)
+              - Remove dependencies that lack clear licensing
+              
+              #### For Unmaintained Packages:
+              - Check if package is actively maintained (recent commits, releases)
+              - Look for actively maintained forks or alternatives
+              - Consider vendoring if package is small and stable
+              
+              ### 🚀 Next Steps
+              
+              1. Review the detailed findings in the PR comments above
+              2. Update \`requirements.txt\`, \`package.json\`, or other dependency files
+              3. Run security audits locally: \`npm audit\`, \`pip-audit\`, etc.
+              4. Push changes to re-trigger this automated review
+              5. Tag @security-team if you need assistance or exceptions
+              
+              ### 📚 Additional Resources
+              
+              - [GitHub Dependency Review Docs](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review)
+              - [OWASP Dependency Check](https://owasp.org/www-project-dependency-check/)
+              - [Snyk Vulnerability Database](https://snyk.io/vuln/)
+              
+              ---
+              *This check helps prevent supply chain attacks and licensing issues. Questions? See your team's security documentation.*`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+      # Step 7: Check for final workflow status
+      - name: Fail workflow if review failed
+        if: steps.dependency-review.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "❌ Dependency review detected security or licensing issues"
+          echo "Review the PR comments and workflow summary for details"
+          exit 1
