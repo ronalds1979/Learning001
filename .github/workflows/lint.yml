@@ -277,7 +277,7 @@ jobs:
       # Step 3: Run ShellCheck
       - name: Run ShellCheck
         if: steps.check-shell.outputs.has_shell_scripts == 'true'
-        uses: ludeeus/action-shellcheck@v2
+        uses: ludeeus/action-shellcheck@master
         with:
           scandir: '.'
           severity: warning
