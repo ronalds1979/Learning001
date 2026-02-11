@@ -35,7 +35,7 @@ on:
 
 jobs:
   analyze:
-    name: CodeQL Analysis (${{ matrix.language }))
+    name: CodeQL Analysis (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 45  # Prevent long-running scans; adjust if needed for large repos
     
