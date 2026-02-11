@@ -219,9 +219,9 @@ jobs:
           # Unique artifact name per language and run
           name: codeql-results-${{ matrix.language }}-${{ github.run_id }}
           
-          # SARIF file location (CodeQL stores in parent of workspace)
+          # SARIF file location (using runner temp directory)
           # Path may vary; 'ignore' mode handles missing files gracefully
-          path: ${{ github.workspace }}/../results/*.sarif
+          path: ${{ runner.temp }}/results/*.sarif
           
           retention-days: 30  # Keep for 30 days for compliance/audit
           
