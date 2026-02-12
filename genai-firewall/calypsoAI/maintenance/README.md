@@ -1,4 +1,4 @@
-﻿# calypsoAI â€“ Maintenance Scripts
+﻿# calypsoAI - Maintenance Scripts
 
 This folder contains **maintenance** scripts for the APS GenAI Firewall (calypsoAI), such as key rotation, cleanup tasks, and periodic housekeeping.
 

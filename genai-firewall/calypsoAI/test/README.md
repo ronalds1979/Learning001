@@ -1,4 +1,4 @@
-﻿# calypsoAI â€“ Test Scripts
+﻿# calypsoAI - Test Scripts
 
 This folder hosts **nonâ€‘production test utilities** for validating connectivity, configuration, and policies.
 
