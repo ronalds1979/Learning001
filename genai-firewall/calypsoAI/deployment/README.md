@@ -17,7 +17,7 @@ This folder contains **deployment** automation for calypsoAI: policy deployment,
   - Require review from both APS product owner and operations (when applicable).
   - Must demonstrate testing in a lower environment before merging to `dev`.
 
-## Miniâ€‘project Example
+## Mini project Example
 
 - `calypsoai-deploy-policy/`
   - A small project that deploys GenAI firewall policy using config + helper module.
