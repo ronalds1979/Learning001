@@ -1,4 +1,4 @@
-﻿# calypsoAI â€“ Deployment Scripts
+﻿# calypsoAI - Deployment Scripts
 
 This folder contains **deployment** automation for calypsoAI: policy deployment, configuration rollout, and environment onboarding.
 
