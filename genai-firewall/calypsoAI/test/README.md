@@ -5,7 +5,7 @@ This folder hosts **nonâ€‘production test utilities** for validating connec
 ## Governance Rules
 
 - Test scripts:
-  - Must be clearly labeled as **Nonâ€‘Production**.
+  - Must be clearly labeled as **Non-Production**.
   - Must not contain or export production credentials.
   - Should be safe to run in lab environments.
 
