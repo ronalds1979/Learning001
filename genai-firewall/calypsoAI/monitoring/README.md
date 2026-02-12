@@ -1,4 +1,4 @@
-﻿# calypsoAI â€“ Monitoring Scripts
+﻿# calypsoAI - Monitoring Scripts
 
 This folder includes scripts to export, aggregate, or alert on GenAI Firewall metrics for calypsoAI.
 
