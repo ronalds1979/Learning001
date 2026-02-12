@@ -1,0 +1,14 @@
+# Custom CodeQL configuration for APS GenAI Firewall
+
+# Disable default queries if you want only custom ones
+# disable-default-queries: false
+
+# Specify which query suites to run
+queries:
+  - uses: security-extended  # More comprehensive than default
+  - uses: security-and-quality  # Includes code quality checks
+
+# Add custom queries for PowerShell or organization-specific patterns
+# queries:
+#   - name: Custom PowerShell Security
+#     uses: ./.github/codeql/queries/powershell-security.ql
