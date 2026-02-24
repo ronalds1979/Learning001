@@ -14,7 +14,7 @@ python hello.py
 
 ## Example Output
 
-```
+```text
 Hello, World!
 ```
 
