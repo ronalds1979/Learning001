@@ -30,6 +30,9 @@ jobs:
     name: CodeQL Analysis (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      HAS_PYTHON: ${{ hashFiles('**/*.py') != '' }}
+      HAS_JAVASCRIPT: ${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx', '**/*.mjs', '**/*.cjs') != '' }}
 
     # Least-privilege permissions for CodeQL upload.
     permissions:
@@ -59,7 +62,7 @@ jobs:
       # ============================================================
       - name: Set up Python (with pip cache)
         if: >-
-          matrix.language == 'python' &&
+          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
           hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') != ''
         uses: actions/setup-python@v5
         with:
@@ -72,7 +75,7 @@ jobs:
 
       - name: Set up Python (no cache)
         if: >-
-          matrix.language == 'python' &&
+          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
           hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') == ''
         uses: actions/setup-python@v5
         with:
@@ -81,7 +84,7 @@ jobs:
       # Install Python dependencies (monorepo-aware).
       - name: Install Python dependencies
         if: >-
-          matrix.language == 'python' &&
+          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
           (hashFiles('**/requirements*.txt') != '' || hashFiles('**/pyproject.toml') != '')
         shell: bash
         run: |
@@ -158,7 +161,7 @@ jobs:
       # 3) Node.js setup
       # ============================================================
       - name: Set up Node.js
-        if: matrix.language == 'javascript'
+        if: matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -171,7 +174,7 @@ jobs:
       # Install Node.js dependencies (monorepo-aware).
       - name: Install Node.js dependencies
         if: >-
-          matrix.language == 'javascript' &&
+          matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true' &&
           hashFiles('**/package.json') != ''
         shell: bash
         run: |
@@ -242,6 +245,9 @@ jobs:
       # 4) CodeQL init
       # ============================================================
       - name: Initialize CodeQL
+        if: >-
+          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
+          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
@@ -257,6 +263,9 @@ jobs:
       # 5) Build
       # ============================================================
       - name: Autobuild
+        if: >-
+          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
+          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
         uses: github/codeql-action/autobuild@v3
 
       # ============================================================
@@ -264,6 +273,9 @@ jobs:
       # ============================================================
       - name: Perform CodeQL Analysis
         id: analyze
+        if: >-
+          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
+          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
@@ -304,6 +316,8 @@ jobs:
 
           if [ "${{ steps.analyze.outcome }}" == "success" ]; then
             echo "**Analysis Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.analyze.outcome }}" == "skipped" ]; then
+            echo "**Analysis Status:** ⏭️ Skipped (no source files for this language)" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Analysis Status:** ❌ Failed" >> $GITHUB_STEP_SUMMARY
           fi
