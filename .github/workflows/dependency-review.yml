@@ -6,7 +6,7 @@ name: Dependency Review
 # - Alert on deprecated or unmaintained packages
 # - Prevent supply chain attacks
 on:
-  pull_request:
+  workflow_call:
     branches: [ "main", "dev" ]
     paths:
       # Python dependency files
