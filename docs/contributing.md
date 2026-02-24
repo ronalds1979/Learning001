@@ -1,26 +1,26 @@
-﻿# Contributing Guide — APS GenAI Firewall Scripts
+﻿# Contributing Guide — Automation Scripts
 
 ## 1. Before You Start
 
-- Ensure you have access to the repository and APS product backlog (Azure Boards).
+- Ensure you have access to the repository and your project backlog/tracker.
 - Identify the right folder:
-  - `genai-firewall/calypsoAI/maintenance`
-  - `genai-firewall/calypsoAI/deployment`
-  - `genai-firewall/calypsoAI/monitoring`
-  - `genai-firewall/calypsoAI/test`
+  - `product-area/sub-product/maintenance`
+  - `product-area/sub-product/deployment`
+  - `product-area/sub-product/monitoring`
+  - `product-area/sub-product/test`
   - `shared/modules` or `shared/templates`
 
 ## 2. Script Naming Convention
 
 Use:
 
-- `calypsoai-<description-using-verbs>.<ext>`
+- `sub-product-<description-using-verbs>.<ext>`
 
 Examples:
 
-- `calypsoai-rotate-keys.ps1`
-- `calypsoai-export-metrics.py`
-- `calypsoai-test-connection.ps1`
+- `sub-product-rotate-keys.ps1`
+- `sub-product-export-metrics.py`
+- `sub-product-test-connection.ps1`
 
 ## 3. Mandatory Script Metadata Header
 
@@ -28,10 +28,10 @@ Each script must include a header like:
 
 ```text
 .METADATA
-  Product: genai-firewall
-  SubProduct: calypsoAI
+  Product: <PRODUCT_AREA>
+  SubProduct: <SUB_PRODUCT>
   Owner: <team or individual>
-  AB_WorkItem: AB#<id>
+  WorkItem: <WORK-1234>
   Sensitivity: <Public-Internal|Restricted|Confidential>
   Dependencies: <list>
 ```

@@ -1,10 +1,10 @@
-﻿# Migration Evidence — APS GenAI Firewall Scripts
+﻿# Migration Evidence — Automation Scripts
 
 This document captures key evidence for audits and architecture reviews.
 
 ## 1. Repository Baseline
 
-- Initial import tag: `v0.1.0-genai-firewall-scripts`
+- Initial import tag: `v0.1.0-project-scripts`
 - Date:
 - Owner:
 
@@ -12,8 +12,8 @@ This document captures key evidence for audits and architecture reviews.
 
 | Date       | Script Path                                              | PR Link           | Tag / Release            | Classification   | Reviewer(s)            |
 |-----------|-----------------------------------------------------------|-------------------|--------------------------|------------------|------------------------|
-| 2026-02-06| genai-firewall/calypsoAI/maintenance/calypsoai-rotate-keys.ps1 | PR #1             | v0.1.0-genai-firewall    | Restricted       | @aps-owner            |
-| 2026-02-06| genai-firewall/calypsoAI/deployment/calypsoai-deploy-policy/… | PR #2             | v0.1.0-genai-firewall    | Restricted       | @aps-owner, @ops-lead |
+| 2026-02-06| product-area/sub-product/maintenance/sub-product-rotate-keys.ps1 | PR #1             | v0.1.0-project    | Restricted       | @owner            |
+| 2026-02-06| product-area/sub-product/deployment/sub-product-deploy-policy/… | PR #2             | v0.1.0-project    | Restricted       | @owner, @ops-lead |
 
 > Extend this table as scripts are migrated.
 

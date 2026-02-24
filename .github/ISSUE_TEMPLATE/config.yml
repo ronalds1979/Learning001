@@ -1,0 +1,16 @@
+# Maintainer note: Keep security reporting placeholders synchronized with
+# .github/ISSUE_TEMPLATE/bug_report.md and
+# .github/ISSUE_TEMPLATE/security_report.md.
+# Placeholders: ORG/REPO, security-contact@company.com, and docs/security.md path.
+
+blank_issues_enabled: false
+contact_links:
+  - name: Private Security Vulnerability Report
+    about: Report suspected vulnerabilities privately. Do not open a public issue for exploitable security findings.
+    url: https://github.com/ORG/REPO/security/advisories/new
+  - name: Security Policy
+    about: Review coordinated disclosure guidance and reporting expectations.
+    url: https://github.com/ORG/REPO/blob/main/docs/security.md
+  - name: Security Contact (Email)
+    about: If GitHub Advisories is unavailable, report privately by email.
+    url: mailto:security-contact@company.com
