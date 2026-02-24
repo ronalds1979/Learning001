@@ -59,6 +59,40 @@ jobs:
             pip install -r requirements.txt
           fi
 
+      # ...Install Black before invoking it ...
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install tools
+        run: pip install --upgrade pip black
+
+      - name: Run Black
+        run: black .
+      # ...Install Black before invoking it ...
+      
+      # ...isort step (and install it) in your workflow...
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      
+      - name: Install formatters
+        run: pip install --upgrade pip isort black
+      
+      - name: Run isort
+        run: isort .
+      
+      - name: Run Black
+        run: black .
+      # ...isort step (and install it) in your workflow...
+
+
       # Step 5: Run flake8 (style guide enforcement)
       - name: Run flake8
         if: steps.check-python.outputs.has_python_files == 'true'
