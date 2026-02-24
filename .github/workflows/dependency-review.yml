@@ -7,30 +7,9 @@ name: Dependency Review
 # - Prevent supply chain attacks
 on:
   pull_request:
-    branches: [ "main", "dev" ]
-    paths:
-      # Python dependency files
-      - '**/requirements.txt'
-      - '**/requirements-dev.txt'
-      - '**/pyproject.toml'
-      - '**/Pipfile'
-      - '**/Pipfile.lock'
-      - '**/setup.py'
-      - '**/poetry.lock'
-      # Node.js/JavaScript dependency files
-      - '**/package.json'
-      - '**/package-lock.json'
-      - '**/yarn.lock'
-      - '**/pnpm-lock.yaml'
-      # Other common dependency files
-      - '**/Gemfile'
-      - '**/Gemfile.lock'
-      - '**/composer.json'
-      - '**/composer.lock'
-      - '**/go.mod'
-      - '**/go.sum'
-      # PowerShell module manifests
-      - '**/*.psd1'
+  push:
+  schedule:
+    - cron: '0 2 * * 1'
   workflow_dispatch:
   workflow_call:
 

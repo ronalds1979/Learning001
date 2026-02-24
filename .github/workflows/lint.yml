@@ -4,21 +4,7 @@ name: Lint & Format
 # Validates Python, PowerShell, and Shell scripts for code quality and best practices
 on:
   pull_request:
-    branches: [ "main", "dev" ]
-    paths:
-      # Python files
-      - '**/*.py'
-      # PowerShell files
-      - '**/*.ps1'
-      - '**/*.psm1'
-      - '**/*.psd1'
-      # Shell scripts
-      - '**/*.sh'
-      # Linter configuration files
-      - '.flake8'
-      - 'pyproject.toml'
-      - 'setup.cfg'
-      - '.shellcheckrc'
+  push:
   workflow_dispatch:  # Allow manual triggers
   workflow_call:
 

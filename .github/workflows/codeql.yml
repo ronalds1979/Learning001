@@ -3,23 +3,7 @@ name: CodeQL Security Analysis
 # Triggers: push/PR on main+dev, weekly schedule, and manual runs.
 on:
   push:
-    branches: ['main', 'dev']
-    paths-ignore:
-      # Skip runs on docs/text-only changes.
-      - '**/*.md'
-      - 'docs/**'
-      - '**/*.txt'
-      - '.gitignore'
-      - 'LICENSE'
   pull_request:
-    branches: ['main', 'dev']
-    paths-ignore:
-      # Same exclusions for PRs.
-      - '**/*.md'
-      - 'docs/**'
-      - '**/*.txt'
-      - '.gitignore'
-      - 'LICENSE'
   schedule:
     # Weekly scan Monday 02:00 UTC.
     - cron: '0 2 * * 1'
