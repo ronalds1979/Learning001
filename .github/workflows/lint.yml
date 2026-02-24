@@ -30,5 +30,3 @@ jobs:
       # If you keep pip-audit, point it to a real file (adjust path as needed)
       - name: Dependency audit
         uses: pypa/gh-action-pip-audit@v1.0.8
-        with:
-          inputs: "requirements.txt,pyproject.toml"
