@@ -1,267 +1,318 @@
 name: CodeQL Security Analysis
 
-# Trigger CodeQL scanning on:
-# - Push to main or dev branches (detects newly introduced vulnerabilities)
-# - Pull requests targeting main or dev (prevents vulnerabilities from being merged)
-# - Weekly schedule (Monday at 3 AM CET) - catches vulnerabilities in dependencies
-# - Manual dispatch for ad-hoc scans (useful for testing or immediate security reviews)
+# Triggers: push/PR on main+dev, weekly schedule, and manual runs.
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: ['main', 'dev']
     paths-ignore:
-      # Skip analysis when only documentation or config files change
+      # Skip runs on docs/text-only changes.
       - '**/*.md'
       - 'docs/**'
       - '**/*.txt'
       - '.gitignore'
       - 'LICENSE'
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: ['main', 'dev']
     paths-ignore:
-      # Same exclusions for PR analysis to save CI time
+      # Same exclusions for PRs.
       - '**/*.md'
       - 'docs/**'
       - '**/*.txt'
       - '.gitignore'
       - 'LICENSE'
   schedule:
-    # Weekly scan every Monday at 3 AM CET (Central European Time, UTC+1)
-    # Note: GitHub Actions cron always uses UTC and doesn't adjust for DST
-    # - Winter (CET): Runs at 3 AM local time (2 AM UTC)
-    # - Summer (CEST): Runs at 4 AM local time (2 AM UTC)
-    # Format: minute hour day-of-month month day-of-week
+    # Weekly scan Monday 02:00 UTC.
     - cron: '0 2 * * 1'
-  workflow_dispatch:  # Enables manual trigger from Actions tab
+  workflow_dispatch:
 
 jobs:
   analyze:
     name: CodeQL Analysis (${{ matrix.language }})
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # Prevent long-running scans; adjust if needed for large repos
-    
-    # Minimal required permissions following principle of least privilege
+    timeout-minutes: 45
+
+    # Least-privilege permissions for CodeQL upload.
     permissions:
-      actions: read           # Read workflow artifacts and status
-      contents: read          # Read repository contents for analysis
-      security-events: write  # Upload SARIF results to Security tab
-      pull-requests: write    # (Optional) Post comments on PRs with findings
+      actions: read
+      contents: read
+      security-events: write
+      pull-requests: write
 
     strategy:
-      # Continue analyzing other languages even if one fails
-      # Important for multi-language repos to get partial results
+      # Keep matrix running even if one language fails.
       fail-fast: false
       matrix:
-        # Languages detected in this repository
-        # Add/remove based on your tech stack
-        # Supported: 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift'
-        language: [ 'python', 'javascript' ]
-        # Note: PowerShell is not directly supported by CodeQL
-        # Workaround: 'javascript' queries catch some patterns, or use custom queries
+        language: ['python', 'javascript']
 
     steps:
       # ============================================================
-      # STEP 1: SOURCE CODE CHECKOUT
+      # 1) Checkout
       # ============================================================
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Conditional fetch depth:
-          # - Scheduled runs: Full history (fetch-depth: 0) for comprehensive analysis
-          # - PR/Push: Shallow clone (fetch-depth: 1) for faster checkout
-          # This optimizes performance without sacrificing analysis quality
+          # Full history for schedule, shallow clone otherwise.
           fetch-depth: ${{ github.event_name == 'schedule' && 0 || 1 }}
 
       # ============================================================
-      # STEP 2-3: PYTHON ENVIRONMENT SETUP
+      # 2) Python setup
       # ============================================================
-      # Set up Python environment (if analyzing Python)
-      # This ensures CodeQL can:
-      # - Resolve import statements
-      # - Follow call chains through dependencies
-      # - Detect vulnerabilities in third-party packages
-      - name: Set up Python
-        if: matrix.language == 'python'
+      - name: Set up Python (with pip cache)
+        if: >-
+          matrix.language == 'python' &&
+          hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') != ''
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'  # Uses latest Python 3.x available
-          cache: 'pip'           # Cache pip packages for faster subsequent runs
+          python-version: '3.x'
+          cache: 'pip'
           cache-dependency-path: |
             **/requirements.txt
             **/requirements-dev.txt
+            **/pyproject.toml
 
-      # Install Python dependencies BEFORE CodeQL initialization
-      # Why: CodeQL performs better analysis when it can resolve all imports
-      # continue-on-error: true ensures analysis runs even if dependencies fail
+      - name: Set up Python (no cache)
+        if: >-
+          matrix.language == 'python' &&
+          hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') == ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Install Python dependencies (monorepo-aware).
       - name: Install Python dependencies
-        if: matrix.language == 'python' && hashFiles('**/requirements*.txt') != ''
+        if: >-
+          matrix.language == 'python' &&
+          (hashFiles('**/requirements*.txt') != '' || hashFiles('**/pyproject.toml') != '')
         shell: bash
         run: |
-          # Upgrade pip to latest version for best compatibility
+          set -euo pipefail
+
+          # Upgrade pip to latest version for best compatibility.
           python -m pip install --upgrade pip
-          
-          # Install production dependencies if requirements.txt exists
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          
-          # Install development dependencies if requirements-dev.txt exists
-          if [ -f requirements-dev.txt ]; then
-            pip install -r requirements-dev.txt
-          fi
-        continue-on-error: true  # Don't block analysis if dependencies have conflicts
+
+          # Discover manifests recursively, skipping generated/dependency folders.
+          mapfile -t requirement_files < <(find . -type f \( -name 'requirements.txt' -o -name 'requirements-dev.txt' \) \
+            ! -path '*/.git/*' \
+            ! -path '*/.venv/*' \
+            ! -path '*/venv/*' \
+            ! -path '*/env/*' \
+            ! -path '*/node_modules/*' \
+            ! -path '*/dist/*' \
+            ! -path '*/build/*' | sort)
+          mapfile -t pyproject_files < <(find . -type f -name 'pyproject.toml' \
+            ! -path '*/.git/*' \
+            ! -path '*/.venv/*' \
+            ! -path '*/venv/*' \
+            ! -path '*/env/*' \
+            ! -path '*/node_modules/*' \
+            ! -path '*/dist/*' \
+            ! -path '*/build/*' | sort)
+
+          poetry_installed="false"
+
+          # Install requirements files first, grouped by directory.
+          declare -A requirement_dirs=()
+          for req_file in "${requirement_files[@]:-}"; do
+            req_dir="$(dirname "$req_file")"
+            requirement_dirs["$req_dir"]=1
+          done
+
+          for req_dir in "${!requirement_dirs[@]}"; do
+            echo "Installing Python requirements in $req_dir"
+            pushd "$req_dir" >/dev/null
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            fi
+            if [ -f requirements-dev.txt ]; then
+              pip install -r requirements-dev.txt
+            fi
+            popd >/dev/null
+          done
+
+          # Fallback to pyproject for directories without requirements files.
+          for pyproject_file in "${pyproject_files[@]:-}"; do
+            project_dir="$(dirname "$pyproject_file")"
+
+            if [ -f "$project_dir/requirements.txt" ] || \
+               [ -f "$project_dir/requirements-dev.txt" ]; then
+              continue
+            fi
+
+            echo "Installing Python project from $project_dir/pyproject.toml"
+            pushd "$project_dir" >/dev/null
+            if grep -q '^\[tool\.poetry\]' pyproject.toml; then
+              if [ "$poetry_installed" = "false" ]; then
+                python -m pip install poetry
+                poetry_installed="true"
+              fi
+              poetry config virtualenvs.create false
+              poetry install --no-interaction --no-root
+            else
+              pip install .
+            fi
+            popd >/dev/null
+          done
+        continue-on-error: true
 
       # ============================================================
-      # STEP 4-5: NODE.JS ENVIRONMENT SETUP
+      # 3) Node.js setup
       # ============================================================
-      # Set up Node.js environment (if analyzing JavaScript/TypeScript)
       - name: Set up Node.js
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Use Node.js LTS version
-          # Conditionally enable npm cache:
-          # - 'npm' if package-lock.json exists
-          # - null (no cache) if no lock file
-          # Note: YAML 'null' is required; empty string would cause error
-          cache: ${{ hashFiles('**/package-lock.json') != '' && 'npm' || null }}
+          node-version: '20'
+          # Cache based on lockfile presence.
+          cache: >-
+            ${{ hashFiles('**/pnpm-lock.yaml') != '' && 'pnpm' ||
+            (hashFiles('**/yarn.lock') != '' && 'yarn' ||
+            (hashFiles('**/package-lock.json') != '' && 'npm' || null)) }}
 
-      # Install Node.js dependencies BEFORE CodeQL initialization
-      # Uses 'npm ci' for lock file (faster, reproducible)
-      # Falls back to 'npm install' if no lock file exists
+      # Install Node.js dependencies (monorepo-aware).
       - name: Install Node.js dependencies
-        if: matrix.language == 'javascript' && hashFiles('package.json') != ''
+        if: >-
+          matrix.language == 'javascript' &&
+          hashFiles('**/package.json') != ''
         shell: bash
         run: |
-          if [ -f package-lock.json ]; then
-            # npm ci: Clean install from lock file (preferred for CI)
-            npm ci
-          else
-            # npm install: Generate lock file and install
-            npm install
+          set -euo pipefail
+
+          # Enable package manager shims (pnpm/yarn) via Corepack when available.
+          corepack enable || true
+
+          is_root_workspace="false"
+          if [ -f package.json ] && grep -q '"workspaces"' package.json; then
+            is_root_workspace="true"
           fi
-        continue-on-error: true  # Don't block analysis on dependency issues
+
+          # Workspace root install: pnpm.
+          if [ -f pnpm-workspace.yaml ] || \
+             { [ "$is_root_workspace" = "true" ] && [ -f pnpm-lock.yaml ]; }; then
+            echo "Detected pnpm workspace at repository root"
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile
+            else
+              pnpm install
+            fi
+            exit 0
+          fi
+
+          # Workspace root install: Yarn.
+          if [ "$is_root_workspace" = "true" ] && [ -f yarn.lock ]; then
+            echo "Detected Yarn workspace at repository root"
+            yarn install --immutable || \
+            yarn install --frozen-lockfile || \
+            yarn install
+            exit 0
+          fi
+
+          # Discover package manifests recursively.
+          mapfile -t package_files < <(find . -type f -name 'package.json' \
+            ! -path '*/node_modules/*' \
+            ! -path '*/dist/*' \
+            ! -path '*/build/*' | sort)
+
+          declare -A package_dirs=()
+          for package_file in "${package_files[@]:-}"; do
+            package_dir="$(dirname "$package_file")"
+            package_dirs["$package_dir"]=1
+          done
+
+          for package_dir in "${!package_dirs[@]}"; do
+            echo "Installing Node.js dependencies in $package_dir"
+            pushd "$package_dir" >/dev/null
+
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile || pnpm install
+            elif [ -f yarn.lock ]; then
+              yarn install --immutable || \
+              yarn install --frozen-lockfile || \
+              yarn install
+            elif [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            popd >/dev/null
+          done
+        continue-on-error: true
 
       # ============================================================
-      # STEP 6: CODEQL INITIALIZATION
+      # 4) CodeQL init
       # ============================================================
-      # Initialize CodeQL analysis environment
-      # This step:
-      # - Downloads CodeQL CLI and databases
-      # - Loads query packs
-      # - Prepares extractor for the specified language
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          
-          # Query suite configuration:
-          # - 'security-extended': More comprehensive than default
-          #   Includes additional security checks with slightly higher false positive rate
-          # - Alternative: 'security-and-quality' includes code quality checks
           queries: security-extended
-          
-          # Optional: Use custom configuration file for:
-          # - Custom queries specific to your organization
-          # - Path filtering
-          # - Query exclusions
+
+          # Optional custom config (queries, exclusions, path filters).
           # config-file: ./.github/codeql/codeql-config.yml
-          
-          # Optional: Specify source root if code is in subdirectory
+
+          # Optional source root for nested projects.
           # source-root: src
 
       # ============================================================
-      # STEP 7: BUILD CODE
+      # 5) Build
       # ============================================================
-      # Autobuild attempts to compile the code
-      # Behavior by language:
-      # - Compiled (C/C++, C#, Java): Runs build system (make, mvn, etc.)
-      # - Interpreted (Python, JavaScript): Minimal/no build, just extraction
-      # For complex builds, replace this with manual build commands
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
 
       # ============================================================
-      # STEP 8: PERFORM ANALYSIS
+      # 6) Analyze
       # ============================================================
-      # Run CodeQL analysis queries and generate results
-      # This step:
-      # - Executes all queries from the selected suite
-      # - Generates SARIF output
-      # - Automatically uploads results to Security tab
       - name: Perform CodeQL Analysis
         id: analyze
         uses: github/codeql-action/analyze@v3
         with:
-          # Category helps organize results when multiple analyses exist
-          # Format: /language:<language-name>
           category: "/language:${{ matrix.language }}"
-          
-          # Optional: Configure failure behavior based on severity
-          # Uncomment to fail workflow on critical/high findings:
+
+          # Optional: fail workflow on critical findings
           # fail-on-severity: critical
-          # 
-          # Default behavior: Upload results but don't fail workflow
-          # This allows reviewing findings without blocking deployments
 
       # ============================================================
-      # STEP 9: UPLOAD ARTIFACTS
+      # 7) Upload artifacts
       # ============================================================
-      # Upload SARIF results as downloadable artifacts
-      # Purpose:
-      # - Audit trail (results are also in Security tab)
-      # - Offline analysis
-      # - Integration with external tools
-      # Note: Results are automatically uploaded to Security tab by analyze action
       - name: Upload CodeQL results as artifact
-        if: always()  # Upload even if analysis found vulnerabilities
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          # Unique artifact name per language and run
           name: codeql-results-${{ matrix.language }}-${{ github.run_id }}
-          
-          # SARIF file location (using runner temp directory)
-          # Path may vary; 'ignore' mode handles missing files gracefully
+
+          # SARIF location can vary by runner/image.
           path: ${{ runner.temp }}/results/*.sarif
-          
-          retention-days: 30  # Keep for 30 days for compliance/audit
-          
-          # 'ignore': Don't fail if SARIF files aren't found
-          # SARIF location can vary; results are in Security tab anyway
+
+          retention-days: 30
+          # Don't fail if artifacts are missing (results still go to Security tab).
           if-no-files-found: ignore
 
       # ============================================================
-      # STEP 10: GENERATE SUMMARY
+      # 8) Summary
       # ============================================================
-      # Create a human-readable summary in GitHub Actions UI
-      # Appears on the workflow run summary page
       - name: Analysis summary
-        if: always()  # Always generate summary regardless of success/failure
+        if: always()
         shell: bash
         run: |
-          # Write to GitHub Actions job summary (shown in UI)
           echo "## 🔐 CodeQL Analysis Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Display key metadata
+
           echo "**Language:** \`${{ matrix.language }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
           echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          
-          # Display analysis outcome
-          # Uses step outcome from analyze step (success/failure)
+
           if [ "${{ steps.analyze.outcome }}" == "success" ]; then
             echo "**Analysis Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Analysis Status:** ❌ Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Link to detailed results in GitHub Security tab
-          echo "📊 [View detailed results in Security tab](/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
+
+          security_url="/${{ github.repository }}/security/code-scanning"
+          echo "📊 [View detailed results in Security tab]($security_url)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
-          
-          # Document configuration used
+
           echo "*CodeQL Version: Latest | Query Suite: security-extended*" >> $GITHUB_STEP_SUMMARY
