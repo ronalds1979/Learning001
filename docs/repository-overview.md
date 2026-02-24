@@ -89,6 +89,7 @@ Current repository layout and responsibilities:
 
 - [README.md](../README.md)
 - [CHANGELOG.md](../CHANGELOG.md)
+- [ci-cd.md](ci-cd.md)
 - [architecture.md](architecture.md)
 - [security.md](security.md)
 - [contributing.md](contributing.md)

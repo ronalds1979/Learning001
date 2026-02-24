@@ -16,6 +16,7 @@ Use placeholders and replace them for your project:
 ## Quick Links
 
 - [Repository Overview](docs/repository-overview.md)
+- [CI/CD Workflows](docs/ci-cd.md)
 - [Architecture](docs/architecture.md)
 - [Contributing Guide](docs/contributing.md)
 - [Sensitivity Classification](docs/classification-model.md)
