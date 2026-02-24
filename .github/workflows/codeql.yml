@@ -30,9 +30,6 @@ jobs:
     name: CodeQL Analysis (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      HAS_PYTHON: ${{ hashFiles('**/*.py') != '' }}
-      HAS_JAVASCRIPT: ${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx', '**/*.mjs', '**/*.cjs') != '' }}
 
     # Least-privilege permissions for CodeQL upload.
     permissions:
@@ -57,12 +54,30 @@ jobs:
           # Full history for schedule, shallow clone otherwise.
           fetch-depth: ${{ github.event_name == 'schedule' && 0 || 1 }}
 
+      - name: Detect language sources
+        id: detect_sources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if find . -type f -name '*.py' | grep -q .; then
+            echo "has_python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if find . -type f \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' -o -name '*.mjs' -o -name '*.cjs' \) | grep -q .; then
+            echo "has_javascript=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_javascript=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # ============================================================
       # 2) Python setup
       # ============================================================
       - name: Set up Python (with pip cache)
         if: >-
-          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
+          matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true' &&
           hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') != ''
         uses: actions/setup-python@v5
         with:
@@ -75,7 +90,7 @@ jobs:
 
       - name: Set up Python (no cache)
         if: >-
-          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
+          matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true' &&
           hashFiles('**/requirements.txt', '**/requirements-dev.txt', '**/pyproject.toml') == ''
         uses: actions/setup-python@v5
         with:
@@ -84,7 +99,7 @@ jobs:
       # Install Python dependencies (monorepo-aware).
       - name: Install Python dependencies
         if: >-
-          matrix.language == 'python' && env.HAS_PYTHON == 'true' &&
+          matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true' &&
           (hashFiles('**/requirements*.txt') != '' || hashFiles('**/pyproject.toml') != '')
         shell: bash
         run: |
@@ -161,7 +176,7 @@ jobs:
       # 3) Node.js setup
       # ============================================================
       - name: Set up Node.js
-        if: matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true'
+        if: matrix.language == 'javascript' && steps.detect_sources.outputs.has_javascript == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -174,7 +189,7 @@ jobs:
       # Install Node.js dependencies (monorepo-aware).
       - name: Install Node.js dependencies
         if: >-
-          matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true' &&
+          matrix.language == 'javascript' && steps.detect_sources.outputs.has_javascript == 'true' &&
           hashFiles('**/package.json') != ''
         shell: bash
         run: |
@@ -246,8 +261,8 @@ jobs:
       # ============================================================
       - name: Initialize CodeQL
         if: >-
-          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
-          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
+          (matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true') ||
+          (matrix.language == 'javascript' && steps.detect_sources.outputs.has_javascript == 'true')
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
@@ -264,8 +279,8 @@ jobs:
       # ============================================================
       - name: Autobuild
         if: >-
-          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
-          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
+          (matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true') ||
+          (matrix.language == 'javascript' && steps.detect_sources.outputs.has_javascript == 'true')
         uses: github/codeql-action/autobuild@v3
 
       # ============================================================
@@ -274,8 +289,8 @@ jobs:
       - name: Perform CodeQL Analysis
         id: analyze
         if: >-
-          (matrix.language == 'python' && env.HAS_PYTHON == 'true') ||
-          (matrix.language == 'javascript' && env.HAS_JAVASCRIPT == 'true')
+          (matrix.language == 'python' && steps.detect_sources.outputs.has_python == 'true') ||
+          (matrix.language == 'javascript' && steps.detect_sources.outputs.has_javascript == 'true')
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
