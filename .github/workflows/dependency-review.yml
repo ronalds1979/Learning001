@@ -89,7 +89,7 @@ jobs:
       # Step 3: Export review results to file for artifacts
       # The action outputs results in the step, capture them
       - name: Export review results
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         shell: bash
         run: |
           # Create results directory
@@ -116,7 +116,7 @@ jobs:
       # Step 4: Upload dependency review results as artifact
       # Useful for compliance audits and historical tracking
       - name: Upload dependency review results
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: dependency-review-pr-${{ github.event.pull_request.number }}
@@ -126,7 +126,7 @@ jobs:
 
       # Step 5: Generate human-readable summary
       - name: Review summary
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         shell: bash
         run: |
           echo "## 📦 Dependency Review Complete" >> $GITHUB_STEP_SUMMARY
@@ -179,7 +179,7 @@ jobs:
 
       # Step 6: Post detailed guidance on failure (only if not already commented by action)
       - name: Post additional guidance on failure
-        if: always() && steps.dependency-review.outcome == 'failure'
+        if: always() && steps.dependency-review.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
@@ -248,7 +248,7 @@ jobs:
 
       # Step 7: Check for final workflow status
       - name: Fail workflow if review failed
-        if: steps.dependency-review.outcome == 'failure'
+        if: steps.dependency-review.outcome == 'failure' && github.event_name == 'pull_request'
         shell: bash
         run: |
           echo "❌ Dependency review detected security or licensing issues"
