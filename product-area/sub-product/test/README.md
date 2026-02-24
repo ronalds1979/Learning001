@@ -1,6 +1,10 @@
-﻿# calypsoAI - Test Scripts
+﻿# <SUB_PRODUCT> - Test Scripts
 
-This folder hosts **nonâ€‘production test utilities** for validating connectivity, configuration, and policies.
+This folder hosts **non-production test utilities** for validating connectivity, configuration, and policies.
+
+## Structure Reference
+
+- [Architecture Overview](../../../docs/architecture.md)
 
 ## Governance Rules
 
@@ -14,6 +18,6 @@ This folder hosts **nonâ€‘production test utilities** for validating connec
 
 ## Scripts
 
-- `calypsoai-test-connection.ps1`
-  - Simple connectivity test against calypsoAI endpoints.
+- `sub-product-test-connection.ps1`
+  - Simple connectivity test against sub-product endpoints.
   - Classification: `Public-Internal`.

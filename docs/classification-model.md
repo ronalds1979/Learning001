@@ -1,4 +1,4 @@
-﻿# Sensitivity Classification Model — APS Scripts
+﻿# Sensitivity Classification Model — Repository Scripts
 
 All scripts must be classified according to data and system impact.
 
@@ -24,7 +24,7 @@ All scripts must be classified according to data and system impact.
 **Examples:**
 
 - Key rotation scripts.
-- Policy deployment to GenAI firewall.
+- Policy deployment to production security controls.
 - Metrics export from production systems.
 
 ### Confidential
@@ -34,4 +34,4 @@ All scripts must be classified according to data and system impact.
 
 **Default rule:**
 
-If in doubt, classify as **Restricted** and consult APS Security before committing.
+If in doubt, classify as **Restricted** and consult your security team before committing.
