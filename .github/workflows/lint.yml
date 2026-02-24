@@ -20,6 +20,7 @@ on:
       - 'setup.cfg'
       - '.shellcheckrc'
   workflow_dispatch:  # Allow manual triggers
+  workflow_call:
 
 jobs:
   lint-python:
