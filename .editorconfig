@@ -1,0 +1,41 @@
+; EditorConfig baseline for consistent formatting across the repository.
+; Keep rules minimal, explicit, and language-aware to reduce formatter drift.
+
+root = true
+
+; Global defaults for all files unless overridden below.
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+; Markdown keeps trailing whitespace for intentional line breaks.
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+max_line_length = off
+
+; Data/config formats use 2-space indentation.
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+; Python convention uses 4-space indentation.
+[*.py]
+indent_style = space
+indent_size = 4
+
+; Makefile variants require tabs for recipe lines.
+[Makefile]
+indent_style = tab
+
+[makefile]
+indent_style = tab
+
+[GNUmakefile]
+indent_style = tab
+
+[*.mk]
+indent_style = tab
