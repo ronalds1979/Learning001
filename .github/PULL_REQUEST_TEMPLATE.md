@@ -31,7 +31,7 @@ Describe what changed and why. Focus on user or system impact.
 
 ## Linked Work Item(s)
 
-- Azure Boards: `AB#XXXXXX`
+- Work item / ticket: `WORK-1234`
 - Additional references (optional):
 
 ## Type of Change

@@ -21,11 +21,11 @@ We provide security updates for the following branches:
 
 Report privately through one of the channels below.
 
-### Preferred channel
+### Preferred Channel
 
 - Security mailbox: `security-contact@company.com`
 
-### Alternative channels
+### Alternative Channels
 
 - GitHub Security Advisories: use the repository **Report a vulnerability** feature (if enabled).
 - Internal process: follow your organization’s incident-reporting process.

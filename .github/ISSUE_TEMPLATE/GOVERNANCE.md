@@ -5,6 +5,8 @@
 This document defines how the repository is governed, maintained, and evolved.
 It sets clear ownership, decision rights, and quality/security controls.
 
+Canonical repository overview: [docs/repository-overview.md](../../docs/repository-overview.md).
+
 ## 2) Scope
 
 This governance applies to:

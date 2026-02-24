@@ -1,4 +1,4 @@
-# Custom CodeQL configuration for APS GenAI Firewall
+# Custom CodeQL configuration for this repository template
 
 # Disable default queries if you want only custom ones
 # disable-default-queries: false

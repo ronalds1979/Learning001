@@ -2,7 +2,7 @@
 
 Last updated: YYYY-MM-DD
 
-Copyright (c) 2024 Nestlé.
+Copyright (c) 2024 <ORG_NAME>.
 All rights reserved.
 
 ## 1. Scope
@@ -15,7 +15,7 @@ unless a file explicitly states a different license.
 
 No right or license is granted to use, copy, modify, distribute, sublicense, publish,
 or create derivative works from this repository, except as expressly authorized in writing
-by Nestlé.
+by <ORG_NAME>.
 
 ## 3. Permitted Internal Use
 
@@ -40,11 +40,11 @@ Without prior written authorization, you must not:
 
 Some files may include third-party software subject to separate license terms.
 Those terms remain in effect for the applicable components and do not reduce
-Nestlé's rights in proprietary materials.
+<ORG_NAME>'s rights in proprietary materials.
 
 ## 6. Trademarks
 
-Nestlé names, logos, and marks are trademarks of Nestlé or its affiliates.
+Organization names, logos, and marks are trademarks of their respective owners.
 No trademark rights are granted under this notice.
 
 ## 7. Disclaimer of Warranties
@@ -54,7 +54,7 @@ To the maximum extent permitted by applicable law, this repository is provided
 
 ## 8. Limitation of Liability
 
-To the maximum extent permitted by applicable law, Nestlé and its affiliates are not
+To the maximum extent permitted by applicable law, <ORGANIZATION_NAME> and its affiliates are not
 liable for any indirect, incidental, special, consequential, or punitive damages arising
 from use of this repository.
 
@@ -76,6 +76,7 @@ For access, usage, redistribution, or contribution questions, contact:
 Before using this template as a final legal notice, replace placeholders:
 
 - `YYYY-MM-DD`
+- `<ORG_NAME>`
 - `[Jurisdiction]`
 - `[Venue]`
 - contact emails
