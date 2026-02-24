@@ -6,7 +6,7 @@ name: Dependency Review
 # - Alert on deprecated or unmaintained packages
 # - Prevent supply chain attacks
 on:
-  workflow_call:
+  pull_request:
     branches: [ "main", "dev" ]
     paths:
       # Python dependency files
@@ -31,6 +31,8 @@ on:
       - '**/go.sum'
       # PowerShell module manifests
       - '**/*.psd1'
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   dependency-review:
