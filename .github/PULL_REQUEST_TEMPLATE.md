@@ -48,7 +48,7 @@ Describe what changed and why. Focus on user or system impact.
 
 List key areas touched (modules, workflows, docs, configs):
 
-- 
+-
 
 ## Validation and Testing
 
@@ -68,7 +68,7 @@ Describe what you validated and how.
 
 Manual test notes (if applicable):
 
-- 
+-
 
 ## Security and Compliance
 
@@ -85,7 +85,7 @@ Manual test notes (if applicable):
 
 If breaking changes exist, include migration steps:
 
-- 
+-
 
 ## Deployment and Rollback
 
@@ -94,17 +94,17 @@ If breaking changes exist, include migration steps:
 
 Deployment notes:
 
-- 
+-
 
 Rollback plan:
 
-- 
+-
 
 ## Reviewer Notes
 
 Anything specific reviewers should focus on:
 
-- 
+-
 
 ## Final Checklist
 

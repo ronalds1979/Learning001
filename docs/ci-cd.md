@@ -15,5 +15,5 @@ This document describes the CI/CD workflows in this repository, including purpos
 ## Notes
 
 - Reusable workflows use workflow_call. The caller determines the maximum permissions available.
-- Scheduled runs use cron 0 2 * * 1 (Monday 02:00 UTC).
+- Scheduled runs use cron `0 2 * * 1` (Monday 02:00 UTC).
 - Update this document when adding, removing, or changing workflow behavior.

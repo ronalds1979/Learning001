@@ -34,7 +34,7 @@ This changelog format follows [Keep a Changelog](https://keepachangelog.com/en/1
 
 ## [1.0.0] - YYYY-MM-DD
 
-### Added
+### Added 1.0.0
 
 - Initial release.
 
