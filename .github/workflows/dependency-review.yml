@@ -62,8 +62,10 @@ jobs:
           
           # Base and head refs for comparison
           # Defaults are usually correct, but can be overridden:
-          # base-ref: ${{ github.event.pull_request.base.sha }}
-          # head-ref: ${{ github.event.pull_request.head.sha }}
+          base-ref: >-
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || format('refs/heads/{0}', github.event.repository.default_branch) }}
+          head-ref: >-
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || format('refs/heads/{0}', github.event.repository.default_branch) }}
           
           # Vulnerability database configuration
           # Uses GitHub Advisory Database (automatically updated)
